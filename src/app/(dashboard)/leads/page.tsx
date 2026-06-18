@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { LeadCard } from "@/components/LeadCard";
 import { FilterBar } from "@/components/FilterBar";
@@ -34,7 +34,7 @@ interface PaginatedResult {
   totalPages: number;
 }
 
-export default function LeadsPage() {
+function LeadsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isQualifiedView = searchParams.get("qualified") !== "false";
@@ -69,7 +69,6 @@ export default function LeadsPage() {
 
   return (
     <div className="p-6 space-y-5">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
@@ -80,7 +79,7 @@ export default function LeadsPage() {
           </div>
           <p className="text-gray-500 text-sm mt-0.5">
             {isQualifiedView
-              ? "Buyer Intent ≥70 and Delfin Fit ≥70"
+              ? "Buyer Intent ≥70 and Asgard Fit ≥70"
               : "All analyzed leads sorted by relevance"}
           </p>
         </div>
@@ -108,10 +107,8 @@ export default function LeadsPage() {
         </div>
       </div>
 
-      {/* Filters */}
       <FilterBar onFilterChange={handleFilterChange} initialFilters={filters} />
 
-      {/* Results */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
@@ -131,7 +128,6 @@ export default function LeadsPage() {
             ))}
           </div>
 
-          {/* Pagination */}
           {result.totalPages > 1 && (
             <div className="flex items-center justify-between pt-4">
               <button
@@ -166,5 +162,17 @@ export default function LeadsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function LeadsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
+      </div>
+    }>
+      <LeadsContent />
+    </Suspense>
   );
 }
