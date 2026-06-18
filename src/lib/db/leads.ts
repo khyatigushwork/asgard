@@ -1,4 +1,4 @@
-import prisma from "./client";
+import prisma, { type Prisma } from "./client";
 import type { LeadFilters, PaginatedResult } from "@/types";
 
 export async function getLeads(
@@ -80,7 +80,7 @@ export async function getLeads(
 
   const [data, total] = await Promise.all([
     prisma.lead.findMany({
-      where: where as Parameters<typeof prisma.lead.findMany>[0]["where"],
+      where: where as Prisma.LeadWhereInput,
       orderBy,
       skip: (page - 1) * pageSize,
       take: pageSize,
@@ -106,7 +106,7 @@ export async function getLeads(
       },
     }),
     prisma.lead.count({
-      where: where as Parameters<typeof prisma.lead.count>[0]["where"],
+      where: where as Prisma.LeadWhereInput,
     }),
   ]);
 
