@@ -1,0 +1,225 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Platform {
+  REDDIT
+  QUORA
+  TWITTER
+  LINKEDIN
+  INDUSTRY_FORUMS
+  THOMASNET
+  ENGINEERING_STACK
+  OTHER
+}
+
+enum Urgency {
+  IMMEDIATE
+  SHORT_TERM
+  MEDIUM_TERM
+  LONG_TERM
+  UNKNOWN
+}
+
+enum ProjectSize {
+  SMALL
+  MEDIUM
+  LARGE
+  ENTERPRISE
+  UNKNOWN
+}
+
+enum CrawlStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model Source {
+  id          String   @id @default(uuid())
+  platform    Platform
+  name        String
+  description String?
+  apifyActorId String
+  config      Json     @default("{}")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  crawlJobs CrawlJob[]
+  rawPosts  RawPost[]
+
+  @@map("sources")
+}
+
+model PlatformConfig {
+  id          String   @id @default(uuid())
+  platform    Platform @unique
+  searchTerms String[]
+  keywords    String[]
+  excludeTerms String[]
+  maxResults  Int      @default(100)
+  crawlIntervalHours Int @default(6)
+  lastCrawledAt DateTime?
+  isActive    Boolean  @default(true)
+  config      Json     @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("platform_configs")
+}
+
+model CrawlJob {
+  id          String      @id @default(uuid())
+  sourceId    String
+  source      Source      @relation(fields: [sourceId], references: [id])
+  status      CrawlStatus @default(PENDING)
+  apifyRunId  String?
+  startedAt   DateTime?
+  completedAt DateTime?
+  postsFound  Int         @default(0)
+  postsProcessed Int      @default(0)
+  error       String?
+  config      Json        @default("{}")
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  rawPosts RawPost[]
+
+  @@map("crawl_jobs")
+}
+
+model RawPost {
+  id              String   @id @default(uuid())
+  platform        Platform
+  externalId      String
+  sourceId        String?
+  source          Source?  @relation(fields: [sourceId], references: [id])
+  crawlJobId      String?
+  crawlJob        CrawlJob? @relation(fields: [crawlJobId], references: [id])
+  url             String
+  title           String?
+  content         String
+  author          String?
+  authorUrl       String?
+  subreddit       String?
+  upvotes         Int      @default(0)
+  comments        Int      @default(0)
+  views           Int      @default(0)
+  shares          Int      @default(0)
+  postedAt        DateTime?
+  fetchedAt       DateTime @default(now())
+  rawData         Json     @default("{}")
+  isProcessed     Boolean  @default(false)
+  isDuplicate     Boolean  @default(false)
+  contentHash     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  aiAnalysis      AiAnalysis?
+  lead            Lead?
+
+  @@unique([platform, externalId])
+  @@index([platform])
+  @@index([isProcessed])
+  @@index([fetchedAt])
+  @@index([contentHash])
+  @@map("raw_posts")
+}
+
+model AiAnalysis {
+  id                   String   @id @default(uuid())
+  rawPostId            String   @unique
+  rawPost              RawPost  @relation(fields: [rawPostId], references: [id])
+  buyerIntentScore     Float
+  delfinFitScore       Float
+  confidenceScore      Float
+  isQualifiedLead      Boolean  @default(false)
+  industry             String?
+  companyType          String?
+  likelyRole           String?
+  problemStatement     String?
+  requiredSolution     String?
+  productCategory      String?
+  machineCategory      String?
+  serviceCategory      String?
+  urgency              Urgency  @default(UNKNOWN)
+  projectSize          ProjectSize @default(UNKNOWN)
+  customizationLevel   String?
+  customSolutionNeeded Boolean  @default(false)
+  b2bRelevance         Float    @default(0)
+  manufacturingReq     Float    @default(0)
+  engineeringReq       Float    @default(0)
+  industrialRelevance  Float    @default(0)
+  reasoning            String?
+  rawResponse          Json     @default("{}")
+  modelUsed            String?
+  processingTimeMs     Int?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  lead Lead?
+
+  @@map("ai_analysis")
+}
+
+model Lead {
+  id                   String      @id @default(uuid())
+  rawPostId            String      @unique
+  rawPost              RawPost     @relation(fields: [rawPostId], references: [id])
+  aiAnalysisId         String      @unique
+  aiAnalysis           AiAnalysis  @relation(fields: [aiAnalysisId], references: [id])
+  platform             Platform
+  url                  String
+  author               String?
+  title                String?
+  buyerIntentScore     Float
+  delfinFitScore       Float
+  confidenceScore      Float
+  industry             String?
+  companyType          String?
+  likelyRole           String?
+  problemStatement     String?
+  requiredSolution     String?
+  productCategory      String?
+  machineCategory      String?
+  serviceCategory      String?
+  urgency              Urgency     @default(UNKNOWN)
+  projectSize          ProjectSize @default(UNKNOWN)
+  customizationLevel   String?
+  customSolutionNeeded Boolean     @default(false)
+  isQualified          Boolean     @default(false)
+  isArchived           Boolean     @default(false)
+  notes                String?
+  tags                 String[]
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+
+  @@index([isQualified])
+  @@index([platform])
+  @@index([industry])
+  @@index([buyerIntentScore])
+  @@index([delfinFitScore])
+  @@index([createdAt])
+  @@map("leads")
+}
+
+model QualificationThreshold {
+  id                    String   @id @default(uuid())
+  name                  String   @default("default")
+  minBuyerIntentScore   Float    @default(70)
+  minDelfinFitScore     Float    @default(70)
+  minConfidenceScore    Float    @default(70)
+  isActive              Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("qualification_thresholds")
+}
