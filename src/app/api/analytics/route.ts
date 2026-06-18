@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getAnalytics } from "@/lib/db/leads";
 import prisma from "@/lib/db/client";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const [analytics, crawlStats, processingStats] = await Promise.all([

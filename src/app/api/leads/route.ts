@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getLeads } from "@/lib/db/leads";
 import type { LeadFilters, Platform, Urgency, ProjectSize } from "@/types";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   try {
     const sp = req.nextUrl.searchParams;
