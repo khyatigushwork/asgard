@@ -183,12 +183,7 @@ function LeadsContent() {
           <div className="text-xs text-gray-600">{result.total} leads found</div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {result.data.map((lead) => (
-              <div key={lead.id} className="relative">
-                <div className="absolute top-3 right-3 z-10">
-                  <PlatformBadge platform={lead.platform} />
-                </div>
-                <LeadCard lead={lead} onClick={() => router.push(`/leads/${lead.id}`)} />
-              </div>
+              <LeadCard key={lead.id} lead={lead} onClick={() => router.push(`/leads/${lead.id}`)} />
             ))}
           </div>
 
