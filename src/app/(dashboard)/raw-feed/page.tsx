@@ -35,12 +35,13 @@ export default function RawFeedPage() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [platform, setPlatform] = useState("");
-  const totalPages = Math.ceil(total / 20);
+  const pageSize = 50;
+  const totalPages = Math.ceil(total / pageSize);
 
   const fetchPosts = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page: String(page), pageSize: "20" });
+      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
       if (platform) params.set("platform", platform);
       const res = await fetch(`/api/raw-feed?${params}`);
       const data = await res.json();

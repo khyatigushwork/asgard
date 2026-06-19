@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getRawFeed } from "@/lib/db/posts";
 import type { Platform } from "@/types";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   const sp = req.nextUrl.searchParams;
   const page = sp.get("page") ? Number(sp.get("page")) : 1;
