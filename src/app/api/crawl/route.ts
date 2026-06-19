@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
-    const platforms = (body.platforms as Platform[]) ?? ["REDDIT", "TWITTER"];
+    const platforms = (body.platforms as Platform[]) ?? ["REDDIT"];
     const maxPerPlatform = body.maxPerPlatform ?? 25;
     const runQualification = body.qualify !== false;
 

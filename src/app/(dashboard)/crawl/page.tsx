@@ -15,7 +15,7 @@ interface CrawlJob {
   config: Record<string, unknown>;
 }
 
-const PLATFORMS = ["REDDIT", "QUORA", "TWITTER", "INDUSTRY_FORUMS"];
+const PLATFORMS = ["REDDIT"];
 
 export default function CrawlPage() {
   const [jobs, setJobs] = useState<CrawlJob[]>([]);
