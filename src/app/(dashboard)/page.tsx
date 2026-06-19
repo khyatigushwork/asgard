@@ -172,7 +172,7 @@ export default function DashboardPage() {
         <p className="text-xs text-gray-600 uppercase tracking-widest mb-3 font-medium">Qualified Leads</p>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard title="Total Leads" value={analytics?.totalLeads ?? 0} icon={Users} sub="All analyzed leads" color="purple" />
-          <StatCard title="Qualified Leads" value={analytics?.qualifiedLeads ?? 0} icon={Star} sub="Intent ≥70 & Fit ≥70" color="green" />
+          <StatCard title="Qualified Leads" value={analytics?.qualifiedLeads ?? 0} icon={Star} sub="Buyer Intent ≥60" color="green" />
           <StatCard title="Avg Buyer Intent" value={`${analytics?.avgBuyerIntent ?? 0}/100`} icon={TrendingUp} color="amber" />
           <StatCard title="Avg Asgard Fit" value={`${analytics?.avgDelfinFit ?? 0}/100`} icon={ArrowUpRight} color="orange" />
         </div>

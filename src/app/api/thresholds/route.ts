@@ -8,7 +8,7 @@ export async function GET() {
     });
     if (!threshold) {
       threshold = await prisma.qualificationThreshold.create({
-        data: { name: "default", minBuyerIntentScore: 70, minDelfinFitScore: 70, minConfidenceScore: 70 },
+        data: { name: "default", minBuyerIntentScore: 60, minDelfinFitScore: 60, minConfidenceScore: 60 },
       });
     }
     return NextResponse.json(threshold);
@@ -37,7 +37,7 @@ export async function PUT(req: NextRequest) {
       });
     } else {
       threshold = await prisma.qualificationThreshold.create({
-        data: { minBuyerIntentScore: 70, minDelfinFitScore: 70, minConfidenceScore: 70 },
+        data: { minBuyerIntentScore: 60, minDelfinFitScore: 60, minConfidenceScore: 60 },
       });
     }
 

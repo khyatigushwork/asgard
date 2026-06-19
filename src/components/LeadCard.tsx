@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import { ScoreRing } from "./ScoreRing";
 import { Badge } from "./ui/badge";
 import {
@@ -7,7 +8,7 @@ import {
   getUrgencyColor,
   formatRelativeDate,
 } from "@/lib/utils";
-import { ExternalLink, Building2, User, Zap } from "lucide-react";
+import { ExternalLink, Building2, User, Zap, CheckCircle2, Circle } from "lucide-react";
 
 interface LeadCardProps {
   lead: {
@@ -28,16 +29,38 @@ interface LeadCardProps {
     projectSize: string;
     customSolutionNeeded: boolean;
     isQualified: boolean;
+    contacted?: boolean;
     createdAt: string | Date;
   };
   onClick?: () => void;
 }
 
 export function LeadCard({ lead, onClick }: LeadCardProps) {
+  const [contacted, setContacted] = useState(lead.contacted ?? false);
+  const [loading, setLoading] = useState(false);
+
+  async function toggleContacted(e: React.MouseEvent) {
+    e.stopPropagation();
+    setLoading(true);
+    const next = !contacted;
+    setContacted(next);
+    try {
+      await fetch(`/api/leads/${lead.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contacted: next }),
+      });
+    } catch {
+      setContacted(!next); // revert on error
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div
       onClick={onClick}
-      className="bg-gray-900/60 border border-gray-800 rounded-xl p-4 hover:border-blue-600/50 hover:bg-gray-900/80 transition-all cursor-pointer group"
+      className={`bg-gray-900/60 border rounded-xl p-4 hover:border-blue-600/50 hover:bg-gray-900/80 transition-all cursor-pointer group ${contacted ? "border-green-700/60" : "border-gray-800"}`}
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
@@ -103,7 +126,28 @@ export function LeadCard({ lead, onClick }: LeadCardProps) {
 
       {/* Footer */}
       <div className="flex items-center justify-between text-xs text-gray-600">
-        <span>{formatRelativeDate(lead.createdAt)}</span>
+        <div className="flex items-center gap-3">
+          <span>{formatRelativeDate(lead.createdAt)}</span>
+          {lead.isQualified && (
+            <button
+              onClick={toggleContacted}
+              disabled={loading}
+              className={`flex items-center gap-1 text-xs font-medium transition-colors ${
+                contacted
+                  ? "text-green-400 hover:text-green-300"
+                  : "text-gray-500 hover:text-green-400"
+              }`}
+              title={contacted ? "Mark as not contacted" : "Mark as contacted"}
+            >
+              {contacted ? (
+                <CheckCircle2 className="w-3.5 h-3.5" />
+              ) : (
+                <Circle className="w-3.5 h-3.5" />
+              )}
+              {contacted ? "Contacted" : "Mark contacted"}
+            </button>
+          )}
+        </div>
         <a
           href={lead.url}
           target="_blank"

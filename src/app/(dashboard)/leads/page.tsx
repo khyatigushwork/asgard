@@ -135,7 +135,7 @@ function LeadsContent() {
             </h1>
           </div>
           <p className="text-gray-500 text-sm mt-0.5">
-            {isQualifiedView ? "Buyer Intent ≥70 and Asgard Fit ≥70" : "All analyzed leads sorted by relevance"}
+            {isQualifiedView ? "Buyer Intent Score ≥60" : "All analyzed leads sorted by relevance"}
           </p>
         </div>
         <div className="flex gap-2">

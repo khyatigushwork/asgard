@@ -196,6 +196,8 @@ model Lead {
   customizationLevel   String?
   customSolutionNeeded Boolean     @default(false)
   isQualified          Boolean     @default(false)
+  contacted            Boolean     @default(false)
+  contactedAt          DateTime?
   isArchived           Boolean     @default(false)
   notes                String?
   tags                 String[]
@@ -214,9 +216,9 @@ model Lead {
 model QualificationThreshold {
   id                    String   @id @default(uuid())
   name                  String   @default("default")
-  minBuyerIntentScore   Float    @default(70)
-  minDelfinFitScore     Float    @default(70)
-  minConfidenceScore    Float    @default(70)
+  minBuyerIntentScore   Float    @default(60)
+  minDelfinFitScore     Float    @default(60)
+  minConfidenceScore    Float    @default(60)
   isActive              Boolean  @default(true)
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt

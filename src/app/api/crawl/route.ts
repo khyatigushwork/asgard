@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { runCrawl } from "@/lib/apify/orchestrator";
+import { runCrawl } from "@/lib/nimble/orchestrator";
 import { processUnanalyzedPosts } from "@/lib/ai/processor";
 import prisma from "@/lib/db/client";
 import type { Platform } from "@/types";
@@ -100,7 +100,7 @@ async function getOrCreateDefaultSource(): Promise<string> {
       data: {
         name: "Default",
         platform: "REDDIT",
-        apifyActorId: "trudax/reddit-scraper-lite",
+        apifyActorId: "nimble/reddit",
         description: "Default multi-platform source",
       },
     });

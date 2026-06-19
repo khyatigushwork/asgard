@@ -69,13 +69,13 @@ export default function SettingsPage() {
           <div>
             <div className="flex justify-between mb-2">
               <label className="text-sm text-gray-300">Min Buyer Intent Score</label>
-              <span className="text-sm font-bold text-blue-400">{threshold?.minBuyerIntentScore ?? 70}</span>
+              <span className="text-sm font-bold text-blue-400">{threshold?.minBuyerIntentScore ?? 60}</span>
             </div>
             <input
               type="range"
               min="0"
               max="100"
-              value={threshold?.minBuyerIntentScore ?? 70}
+              value={threshold?.minBuyerIntentScore ?? 60}
               onChange={(e) => update("minBuyerIntentScore", Number(e.target.value))}
               className="w-full accent-blue-500"
             />
@@ -89,13 +89,13 @@ export default function SettingsPage() {
           <div>
             <div className="flex justify-between mb-2">
               <label className="text-sm text-gray-300">Min Delfin Fit Score</label>
-              <span className="text-sm font-bold text-purple-400">{threshold?.minDelfinFitScore ?? 70}</span>
+              <span className="text-sm font-bold text-purple-400">{threshold?.minDelfinFitScore ?? 60}</span>
             </div>
             <input
               type="range"
               min="0"
               max="100"
-              value={threshold?.minDelfinFitScore ?? 70}
+              value={threshold?.minDelfinFitScore ?? 60}
               onChange={(e) => update("minDelfinFitScore", Number(e.target.value))}
               className="w-full accent-purple-500"
             />
@@ -104,13 +104,13 @@ export default function SettingsPage() {
           <div>
             <div className="flex justify-between mb-2">
               <label className="text-sm text-gray-300">Min Confidence Score</label>
-              <span className="text-sm font-bold text-emerald-400">{threshold?.minConfidenceScore ?? 70}</span>
+              <span className="text-sm font-bold text-emerald-400">{threshold?.minConfidenceScore ?? 60}</span>
             </div>
             <input
               type="range"
               min="0"
               max="100"
-              value={threshold?.minConfidenceScore ?? 70}
+              value={threshold?.minConfidenceScore ?? 60}
               onChange={(e) => update("minConfidenceScore", Number(e.target.value))}
               className="w-full accent-emerald-500"
             />

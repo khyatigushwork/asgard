@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getLeadById, archiveLead, updateLeadNotes } from "@/lib/db/leads";
+import prisma from "@/lib/db/client";
 
 export async function GET(
   _req: NextRequest,
@@ -25,6 +26,15 @@ export async function PATCH(
     }
     if (body.notes !== undefined) {
       await updateLeadNotes(params.id, body.notes);
+    }
+    if (body.contacted !== undefined) {
+      await prisma.lead.update({
+        where: { id: params.id },
+        data: {
+          contacted: body.contacted,
+          contactedAt: body.contacted ? new Date() : null,
+        },
+      });
     }
     return NextResponse.json({ success: true });
   } catch (err) {
