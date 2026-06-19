@@ -6,7 +6,7 @@ const INDUSTRIAL_SUBREDDITS = [
   "manufacturing",
   "mechanical_engineering",
   "industrialengineering",
-  "PLC",                      // industrial PLC/SCADA, not software
+  "PLC",
   "robotics",
   "CNC",
   "metalworking",
@@ -35,22 +35,60 @@ export interface RedditScrapeConfig {
   dateFrom?: string;
 }
 
-// All search terms are scoped to specific industrial subreddits to avoid noise
+// Expanded buyer-intent search terms scoped to industrial subreddits
 const DEFAULT_SEARCH_TERMS = [
-  { subreddit: "manufacturing", term: "supplier OR manufacturer OR RFQ OR sourcing" },
-  { subreddit: "manufacturing", term: "looking for OR need OR find OR recommend" },
-  { subreddit: "mechanical_engineering", term: "supplier OR manufacturer OR fabrication OR machining" },
-  { subreddit: "CNC", term: "shop OR supplier OR quote OR recommend" },
+  // Manufacturing buyers
+  { subreddit: "manufacturing", term: "looking for supplier OR need manufacturer OR find shop" },
+  { subreddit: "manufacturing", term: "RFQ OR request for quote OR sourcing help" },
+  { subreddit: "manufacturing", term: "contract manufacturing OR outsource OR OEM" },
+  { subreddit: "manufacturing", term: "where can I get OR who makes OR recommend a" },
+  { subreddit: "manufacturing", term: "custom part OR custom component OR fabricate" },
+
+  // CNC buyers
+  { subreddit: "CNC", term: "looking for shop OR need machining OR find a shop" },
+  { subreddit: "CNC", term: "quote OR supplier OR recommend OR outsource" },
+  { subreddit: "CNC", term: "custom part OR prototype OR small batch OR low volume" },
+
+  // Machining buyers
+  { subreddit: "machining", term: "looking for OR need OR find shop OR supplier" },
+  { subreddit: "machining", term: "quote OR RFQ OR prototype OR small batch" },
+
+  // Metalworking buyers
   { subreddit: "metalworking", term: "supplier OR fabrication OR shop OR quote" },
-  { subreddit: "automation", term: "integrator OR solution OR vendor OR supplier" },
-  { subreddit: "PLC", term: "integrator OR solution OR vendor OR supplier" },
-  { subreddit: "robotics", term: "integrator OR supplier OR solution" },
+  { subreddit: "metalworking", term: "looking for OR need OR custom OR outsource" },
+
+  // Welding buyers
+  { subreddit: "welding", term: "custom fabrication OR need welding OR find welder" },
+  { subreddit: "welding", term: "structural OR shop OR quote OR supplier" },
+
+  // Engineering buyers
+  { subreddit: "mechanical_engineering", term: "supplier OR manufacturer OR fabrication OR machining" },
+  { subreddit: "mechanical_engineering", term: "custom part OR prototype OR outsource OR RFQ" },
+  { subreddit: "industrialengineering", term: "supplier OR manufacturer OR vendor OR outsource" },
+
+  // Automation/robotics buyers
+  { subreddit: "PLC", term: "integrator OR solution OR vendor OR supplier OR system" },
+  { subreddit: "robotics", term: "integrator OR supplier OR solution OR custom" },
+
+  // Business buyers
   { subreddit: "smallbusiness", term: "manufacturer OR supplier OR fabrication OR contract manufacturing" },
+  { subreddit: "smallbusiness", term: "where to source OR looking for supplier OR need to manufacture" },
   { subreddit: "Entrepreneur", term: "manufacturer OR supplier OR contract manufacturing OR OEM" },
-  { subreddit: "supplychain", term: "supplier OR sourcing OR manufacturer OR RFQ" },
-  { subreddit: "procurement", term: "supplier OR manufacturer OR RFQ OR quote" },
-  { subreddit: "machining", term: "shop OR supplier OR quote OR recommend" },
-  { subreddit: "engineering", term: "supplier OR manufacturer OR fabrication OR contractor" },
+  { subreddit: "Entrepreneur", term: "product manufacturing OR find factory OR sourcing" },
+
+  // Supply chain buyers
+  { subreddit: "supplychain", term: "supplier OR sourcing OR manufacturer OR RFQ OR vendor" },
+  { subreddit: "procurement", term: "supplier OR manufacturer OR RFQ OR quote OR tender" },
+
+  // Hydraulics/pneumatics buyers
+  { subreddit: "hydraulics", term: "custom OR supplier OR fabricate OR need OR looking for" },
+  { subreddit: "pneumatics", term: "custom OR supplier OR fabricate OR need OR looking for" },
+
+  // HVAC buyers
+  { subreddit: "HVAC", term: "custom OR supplier OR manufacturer OR need OR equipment" },
+
+  // Packaging buyers
+  { subreddit: "packaging", term: "supplier OR manufacturer OR custom OR need OR sourcing" },
 ];
 
 function hashContent(content: string): string {
@@ -58,7 +96,6 @@ function hashContent(content: string): string {
 }
 
 function parseRedditPost(item: Record<string, unknown>): RawPostData | null {
-  // trudax/reddit-scraper-lite field names: id, parsedId, url, username, title, communityName, body, createdAt, numberOfComments, score
   const id = (item.parsedId ?? item.id ?? item.postId) as string | undefined;
   const url = (item.url as string) ?? `https://reddit.com${(item.permalink as string) ?? ""}`;
   const content = ((item.body as string) ?? (item.selftext as string) ?? (item.text as string) ?? "").trim();
@@ -118,8 +155,6 @@ function parseRedditComment(item: Record<string, unknown>): RawPostData | null {
   };
 }
 
-const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
-
 function isWithinLastDays(item: Record<string, unknown>, days = 3): boolean {
   const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
   const ts =
@@ -128,7 +163,6 @@ function isWithinLastDays(item: Record<string, unknown>, days = 3): boolean {
       : item.created_utc
       ? (item.created_utc as number) * 1000
       : null;
-  // If no timestamp, include it (let DB dedup handle later)
   if (ts === null) return true;
   return ts >= cutoff;
 }
@@ -136,20 +170,20 @@ function isWithinLastDays(item: Record<string, unknown>, days = 3): boolean {
 export async function scrapeReddit(
   config: RedditScrapeConfig = {}
 ): Promise<RawPostData[]> {
-  const subreddits = config.subreddits ?? INDUSTRIAL_SUBREDDITS.slice(0, 8);
+  const subreddits = config.subreddits ?? INDUSTRIAL_SUBREDDITS;
   const maxPosts = config.maxPosts ?? 50;
 
   const results: RawPostData[] = [];
   const seen = new Set<string>();
 
-  // Strategy 1: Scrape /new/ on targeted industrial subreddits directly
-  for (const subreddit of subreddits.slice(0, 6)) {
+  // Strategy 1: Scrape /new/ on ALL industrial subreddits
+  for (const subreddit of subreddits) {
     try {
       const items = await runActorAndGetResults({
         actorId: APIFY_ACTORS.REDDIT_SCRAPER,
         input: {
           startUrls: [{ url: `https://www.reddit.com/r/${subreddit}/new/` }],
-          maxItems: Math.min(maxPosts, 20),
+          maxItems: 25,
           proxy: { useApifyProxy: true },
         },
       });
@@ -167,15 +201,15 @@ export async function scrapeReddit(
     }
   }
 
-  // Strategy 2: Subreddit-scoped searches — keeps results on-topic
-  for (const { subreddit, term } of DEFAULT_SEARCH_TERMS.slice(0, 6)) {
+  // Strategy 2: Buyer-intent keyword searches across all subreddits
+  for (const { subreddit, term } of DEFAULT_SEARCH_TERMS) {
     try {
       const url = `https://www.reddit.com/r/${subreddit}/search/?q=${encodeURIComponent(term)}&sort=new&t=week&restrict_sr=1`;
       const items = await runActorAndGetResults({
         actorId: APIFY_ACTORS.REDDIT_SCRAPER,
         input: {
           startUrls: [{ url }],
-          maxItems: 20,
+          maxItems: 25,
           proxy: { useApifyProxy: true },
         },
       });
