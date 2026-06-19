@@ -35,7 +35,7 @@ async function main() {
         content: post.content,
         title: post.title ?? "",
         url: post.url,
-        author: post.author,
+        author: post.author ?? undefined,
         platform: post.platform as "LINKEDIN",
         upvotes: post.upvotes,
         comments: post.comments,
