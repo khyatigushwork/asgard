@@ -23,6 +23,7 @@ interface Lead {
   projectSize: string;
   customSolutionNeeded: boolean;
   isQualified: boolean;
+  contacted?: boolean;
   createdAt: string;
 }
 
@@ -67,6 +68,7 @@ function LeadsContent() {
   const activePlatform = searchParams.get("platform") ?? "ALL";
 
   const [result, setResult] = useState<PaginatedResult | null>(null);
+  const [leads, setLeads] = useState<Lead[]>([]);
   const [platformCounts, setPlatformCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -85,6 +87,7 @@ function LeadsContent() {
       const res = await fetch(`/api/leads?${params}`);
       const data = await res.json();
       setResult(data);
+      setLeads(data.data ?? []);
     } catch {}
     setLoading(false);
   }, [filters, page, isQualifiedView, activePlatform]);
@@ -107,6 +110,17 @@ function LeadsContent() {
 
   useEffect(() => { fetchLeads(); }, [fetchLeads]);
   useEffect(() => { fetchCounts(); }, [fetchCounts]);
+
+  const handleContactedChange = (id: string, contacted: boolean) => {
+    setLeads((prev) => {
+      const updated = prev.map((l) => l.id === id ? { ...l, contacted } : l);
+      // contacted leads sink to bottom, preserving relative order within each group
+      return [
+        ...updated.filter((l) => !l.contacted),
+        ...updated.filter((l) => l.contacted),
+      ];
+    });
+  };
 
   const handleFilterChange = (newFilters: Record<string, string>) => {
     setFilters(newFilters);
@@ -182,8 +196,8 @@ function LeadsContent() {
         <>
           <div className="text-xs text-gray-600">{result.total} leads found</div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {result.data.map((lead) => (
-              <LeadCard key={lead.id} lead={lead} onClick={() => router.push(`/leads/${lead.id}`)} />
+            {leads.map((lead) => (
+              <LeadCard key={lead.id} lead={lead} onClick={() => router.push(`/leads/${lead.id}`)} onContactedChange={handleContactedChange} />
             ))}
           </div>
 

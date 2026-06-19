@@ -74,9 +74,11 @@ export async function getLeads(
     "createdAt",
     "urgency",
   ];
-  const orderBy = validSortFields.includes(sortBy)
+  const primarySort = validSortFields.includes(sortBy)
     ? { [sortBy]: sortOrder }
     : { buyerIntentScore: "desc" as const };
+  // contacted leads always sink to the bottom
+  const orderBy = [{ contacted: "asc" as const }, primarySort];
 
   const [data, total] = await Promise.all([
     prisma.lead.findMany({

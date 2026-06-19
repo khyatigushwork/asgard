@@ -33,9 +33,10 @@ interface LeadCardProps {
     createdAt: string | Date;
   };
   onClick?: () => void;
+  onContactedChange?: (id: string, contacted: boolean) => void;
 }
 
-export function LeadCard({ lead, onClick }: LeadCardProps) {
+export function LeadCard({ lead, onClick, onContactedChange }: LeadCardProps) {
   const [contacted, setContacted] = useState(lead.contacted ?? false);
   const [loading, setLoading] = useState(false);
 
@@ -50,6 +51,7 @@ export function LeadCard({ lead, onClick }: LeadCardProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ contacted: next }),
       });
+      onContactedChange?.(lead.id, next);
     } catch {
       setContacted(!next); // revert on error
     } finally {
